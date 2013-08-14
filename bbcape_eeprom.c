@@ -137,7 +137,7 @@ eeprom_dump (EEPROM_HDR *e)
       for (j = 0; j < 16; j++)
 	{
 	  c = *(p + i + j);
-	  printf ("%c", c < 32 ? '.' : c);
+	  printf ("%c", c < 32 || c > 127 ? '.' : c);
 	  if (j == 7) printf ( " ");
 	}
       printf ("\n");
