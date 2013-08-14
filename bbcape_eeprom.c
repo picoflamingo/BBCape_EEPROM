@@ -182,10 +182,9 @@ main (int argc, char *argv[])
   set_eeprom_bname (&epr, "BeagleBone NULLCape");
   set_eeprom_version (&epr, "00A0");
   set_eeprom_manufacturer (&epr,"picoFlamingo");
-  set_eeprom_part_number (&epr, "BB-BONE-NUL-01");
+  set_eeprom_part_number (&epr, "BB-NULLCape");
   set_eeprom_n_pins (&epr, 0);
   set_eeprom_serial_number (&epr, "2912WTHR0383");
-
 
   flag = 1;
   while (flag)
