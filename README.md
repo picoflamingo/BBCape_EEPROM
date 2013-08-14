@@ -11,22 +11,22 @@ Currently Implemented Commands
 ------------------------------
 Latest version implementes the following commands:
 
-q         : Quit
-d         : Dumps current  EEPROM content
-w [fname] : Write EEPROM to file
+q         : Quit<br>
+d         : Dumps current  EEPROM content<br>
+w [fname] : Write EEPROM to file<br>
 
 Default header Fileds Values
 ----------------------------
 Current version fills the EEPROM header with the following default values:
 
 
-EEPROM Revision : A1
-Board Name      : BeagleBone NULLCape
-HW Version      : 00A0
-Manufacturer    : picoFlamingo
-Part Number     : BB-BONE-NUL-01
-Serial Number   : 2912WTHR0383
-Pin Usage       : 0
+EEPROM Revision : A1<br>
+Board Name      : BeagleBone NULLCape<br>
+HW Version      : 00A0<br>
+Manufacturer    : picoFlamingo<br>
+Part Number     : BB-NULLCAPE<br>
+Serial Number   : 2912WTHR0383<br>
+Pin Usage       : 0<br>
 
 Compilation
 -----------
