@@ -48,8 +48,21 @@ typedef struct _eeprom_t
 } EEPROM_HDR;
 
 /* XXX: Enough for this first release */
-EEPROM_HDR epr;
+static EEPROM_HDR epr;
 
+
+
+
+typedef int (*CMD_FUNCTION) (EEPROM_HDR*, char*);
+
+/* Command callbacks prototypes */
+int cmd_general (EEPROM_HDR*, char*);
+int cmd_board (EEPROM_HDR*, char*);
+
+static int _state = 0;
+#define MAX_STATE 1
+static CMD_FUNCTION cmd_func[] = {cmd_general, cmd_board, NULL};
+static char         *st_name[] = {"TOP", "BOARD", NULL};
 int
 set_eeprom_serial_number (EEPROM_HDR *e, char *sn)
 {
@@ -153,7 +166,7 @@ eeprom_write (EEPROM_HDR *e, char *fname)
 
   if (!e) return -1;
 
-  if ((f = fopen (fname? fname:"test.eeprom", "wb")) == NULL)
+  if ((f = fopen (fname, "wb")) == NULL)
     {
       fprintf (stderr, "Cannot open file test.eeprom\n");
       exit (1);
@@ -161,6 +174,131 @@ eeprom_write (EEPROM_HDR *e, char *fname)
   fwrite (&epr, sizeof (EEPROM_HDR), 1, f);
   fclose (f);
 
+}
+
+/* General commands */
+int
+cmd_general (EEPROM_HDR *e, char *buffer)
+{
+  char  *fname;
+
+  switch (buffer[0])
+    {
+    case 'q':
+      {
+	return 1;
+      }
+    case 'w':
+      {
+	if (strlen (buffer + 2) == 0) fname = "eeprom.bin";
+	else fname = buffer + 2;
+	fprintf (stderr, "+ Writting EEPROM to file '%s'\n\n", fname);
+	eeprom_write (e, fname);
+	break;
+      }
+    case 'd':
+      {
+	eeprom_dump (e);
+	break;
+      }
+    case 'b':
+      {
+	fprintf (stderr, "+ Editing board info\n");
+	_state = 1;
+	break;
+      }
+
+    case '?':
+      {
+	fprintf (stderr, "Available commands:\n");
+	fprintf (stderr, "  q\t\t Quit\n");
+	fprintf (stderr, "  d\t\t Dump EEPROM\n");
+	fprintf (stderr, "  b\t\t Add board info\n");
+	fprintf (stderr, "  w [fname]\t Write EEPROM to file\n");
+	fprintf (stderr, "  r [fname]\t Read EEPROM from file\n\n");
+	break;
+      }
+    default:
+      {
+	fprintf (stderr, "- Pardon?. Enter ? for help\n\n");
+      }
+    }
+  return 0;
+}
+
+int
+cmd_board (EEPROM_HDR *e, char *cmd)
+{
+  char buffer[80];
+
+  switch (cmd[0])
+    {
+    case 'v':
+      {
+	fprintf (stderr, "Board Version (4 bytes) [%c%c%c%c]:\n", 
+		 e->version[0],e->version[1], e->version[2], e->version[3]);
+	fgets (buffer, 80, stdin);
+	buffer[4] = 0;
+	set_eeprom_version (&epr, buffer);
+	break;
+      }
+    case 'm':
+      {
+	fprintf (stderr, "Manufacturer (16 bytes) [%16s]:\n", e->manufacturer);
+	fgets (buffer, 80, stdin);
+	buffer[16] = 0;
+	set_eeprom_manufacturer (&epr, buffer);
+	break;
+      }
+    case 'p':
+      {
+	fprintf (stderr, "Part Number (16 bytes) [%16s]:\n", e->part_number);
+	fgets (buffer, 80, stdin);
+	buffer[16] = 0;
+	set_eeprom_part_number (&epr, buffer);
+	break;
+      }
+    case 'n':
+      {
+	fprintf (stderr, "Board Name (32 bytes) [%32s]:\n", e->bname);
+	fgets (buffer, 80, stdin);
+	buffer[32] = 0;
+	set_eeprom_bname (&epr, buffer);
+	break;
+      }
+    case 's':
+      {
+	fprintf (stderr, "Serial Number  (12 bytes) [%12s]:\n", e->serial);
+	fgets (buffer, 80, stdin);
+	buffer[12] = 0;
+	set_eeprom_serial_number (&epr, buffer);
+	break;
+      }
+
+    case 'u':
+      {
+	fprintf (stderr, "Back to TOP state\n");
+	_state = 0;
+	break;
+      }
+    case '?':
+      {
+	fprintf (stderr, "Available commands:\n");
+	fprintf (stderr, "  u\t\t Back to general commands\n");
+	fprintf (stderr, "  n\t\t Set Cape Name\n");
+	fprintf (stderr, "  v\t\t Set Cape Version\n");
+	fprintf (stderr, "  m\t\t Set Cape Manufacturer\n");
+	fprintf (stderr, "  p\t\t Set Cape Part Number\n");
+	fprintf (stderr, "  s\t\t Set Cape Serial Number\n");
+	break;
+      }
+    default:
+      {
+	fprintf (stderr, "- Pardon?. Enter ? for help\n\n");
+      }
+    }
+
+  return 0;
 }
 
 int
@@ -185,46 +323,17 @@ main (int argc, char *argv[])
   set_eeprom_part_number (&epr, "BB-NULLCape");
   set_eeprom_n_pins (&epr, 0);
   set_eeprom_serial_number (&epr, "2912WTHR0383");
-
-  flag = 1;
-  while (flag)
+  
+  flag = 0;
+  while (!flag)
     {
-      fprintf (stderr, "BBCapeEEPROM> ");  
+      fprintf (stderr, "BBCapeEEPROM-%s> ", st_name[_state]);  
+    skip_prompt:
       fgets (buffer, LINE_SIZE, stdin);
       buffer[strlen(buffer) - 1] = 0; /* Chomp */
-      if (strlen(buffer) <=0 ) continue;
+      if (strlen(buffer) <=0 ) goto skip_prompt;
+      flag = cmd_func[_state] (&epr, buffer);
 
-      switch (buffer[0])
-	{
-	case 'q':
-	  {
-	    flag = 0;
-	    continue;
-	  }
-	case 'w':
-	  {
-	    fprintf (stderr, "+ Writting EEPROM to file '%s'\n\n", buffer + 2);
-	    eeprom_write (&epr, buffer + 2);
-	    break;
-	  }
-	case 'd':
-	  {
-	    eeprom_dump (&epr);
-	    break;
-	  }
-	case '?':
-	  {
-	    fprintf (stderr, "Available commands:\n");
-	    fprintf (stderr, "  q\t\t Quit\n");
-	    fprintf (stderr, "  d\t\t Dump EEPROM\n");
-	    fprintf (stderr, "  w [fname]\t Write EEPROM to file\n\n");
-	    continue;
-	  }
-	default:
-	  {
-	    fprintf (stderr, "- Pardon?. Enter ? for help\n\n");
-	  }
-	}
     }
   fprintf (stderr, "--\nThanks for using BeagleBoneCape EEPROM Generator\n");
   fprintf (stderr, "Visit http://papermint-designs.com/community for more tools and tutorials\n\n");
