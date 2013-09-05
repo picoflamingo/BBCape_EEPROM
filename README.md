@@ -13,7 +13,19 @@ Latest version implementes the following commands:
 
 q         : Quit<br>
 d         : Dumps current  EEPROM content<br>
+b	  : Add board info
 w [fname] : Write EEPROM to file<br>
+
+On board infor mode the following commands are available:
+
+u		 Back to general commands
+p		 Print Cape info
+1		 Set Cape Name
+2		 Set Cape Version
+3		 Set Cape Manufacturer
+4		 Set Cape Part Number
+5		 Set Cape Serial Number
+
 
 Default header Fileds Values
 ----------------------------
