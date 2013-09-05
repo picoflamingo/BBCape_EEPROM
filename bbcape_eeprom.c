@@ -60,6 +60,8 @@ int cmd_general (EEPROM_HDR*, char*);
 int cmd_board (EEPROM_HDR*, char*);
 
 static int _state = 0;
+static int _dirty = 0;
+
 #define MAX_STATE 1
 static CMD_FUNCTION cmd_func[] = {cmd_general, cmd_board, NULL};
 static char         *st_name[] = {"TOP", "BOARD", NULL};
@@ -67,6 +69,8 @@ int
 set_eeprom_serial_number (EEPROM_HDR *e, char *sn)
 {
   strncpy (e->serial, sn, 16);
+  _dirty = 1;
+
   return 0;
 }
 
@@ -79,6 +83,9 @@ set_eeprom_n_pins (EEPROM_HDR *e, int n)
   snprintf (c, 3, "%02x", n);
   e->n_pins[0] = c[0];
   e->n_pins[1] = c[1];
+
+  _dirty = 1;
+
   return 0;
 }
 
@@ -86,6 +93,9 @@ int
 set_eeprom_part_number (EEPROM_HDR *e, char *pn)
 {
   strncpy (e->part_number, pn, 16);
+
+  _dirty = 1;
+
   return 0;
 }
 
@@ -93,6 +103,9 @@ int
 set_eeprom_manufacturer (EEPROM_HDR *e, char *m_name)
 {
   strncpy (e->manufacturer, m_name, 16);
+
+  _dirty = 1;
+
   return 0;
 }
 
@@ -100,6 +113,9 @@ int
 set_eeprom_version (EEPROM_HDR *e, char *version)
 {
   strncpy (e->version, version, 4);
+
+  _dirty = 1;
+
   return 0;
 }
 
@@ -107,6 +123,9 @@ int
 set_eeprom_bname (EEPROM_HDR *e, char *name)
 {
   strncpy (e->bname, name, 32);
+
+  _dirty = 1;
+
   return 0;
 }
 
@@ -115,6 +134,8 @@ set_eeprom_rev (EEPROM_HDR *e, char rev[2])
 {
   e->rev[0] = rev[0];
   e->rev[1] = rev[1];
+
+  _dirty = 1;
 
   return 0;
 }
@@ -173,7 +194,25 @@ eeprom_write (EEPROM_HDR *e, char *fname)
     }
   fwrite (&epr, sizeof (EEPROM_HDR), 1, f);
   fclose (f);
+  _dirty = 0;
 
+  return 0;
+}
+
+int
+eeprom_print_board_info (EEPROM_HDR *e)
+{
+
+  fprintf (stderr, "1. Cape Name (32 bytes)         : %s\n", e->bname);
+  fprintf (stderr, "2. Cape Version (4 bytes)       : %c%c%c%c\n", 
+	   e->version[0],e->version[1], e->version[2], e->version[3]);
+  fprintf (stderr, "3. Cape Manufacturer (16 bytes) : %s\n", 
+	   e->manufacturer);
+  fprintf (stderr, "4. Part Number (16 bytes)       : %s\n", 
+	   e->part_number);
+  fprintf (stderr, "5. Serial Number  (12 bytes)    : %s\n", e->serial);
+  fprintf (stderr, "--- \n");
+  return 0;
 }
 
 /* General commands */
@@ -204,6 +243,7 @@ cmd_general (EEPROM_HDR *e, char *buffer)
     case 'b':
       {
 	fprintf (stderr, "+ Editing board info\n");
+	eeprom_print_board_info (&epr);
 	_state = 1;
 	break;
       }
@@ -231,9 +271,12 @@ cmd_board (EEPROM_HDR *e, char *cmd)
 {
   char buffer[80];
 
+  if (cmd[0] != 'q')
+    eeprom_print_board_info (&epr);
+
   switch (cmd[0])
     {
-    case 'v':
+    case '2':
       {
 	fprintf (stderr, "Board Version (4 bytes) [%c%c%c%c]:\n", 
 		 e->version[0],e->version[1], e->version[2], e->version[3]);
@@ -242,34 +285,43 @@ cmd_board (EEPROM_HDR *e, char *cmd)
 	set_eeprom_version (&epr, buffer);
 	break;
       }
-    case 'm':
+    case '3':
       {
 	fprintf (stderr, "Manufacturer (16 bytes) [%16s]:\n", e->manufacturer);
+	/* FIXME: Add a function to read and sanitize input */
 	fgets (buffer, 80, stdin);
+	buffer[strlen(buffer) - 1] = 0;
+	if (strlen (buffer) == 0) break;
 	buffer[16] = 0;
 	set_eeprom_manufacturer (&epr, buffer);
 	break;
       }
-    case 'p':
+    case '4':
       {
 	fprintf (stderr, "Part Number (16 bytes) [%16s]:\n", e->part_number);
 	fgets (buffer, 80, stdin);
+	buffer[strlen(buffer) - 1] = 0;
+	if (strlen (buffer) == 0) break;
 	buffer[16] = 0;
 	set_eeprom_part_number (&epr, buffer);
 	break;
       }
-    case 'n':
+    case '1':
       {
 	fprintf (stderr, "Board Name (32 bytes) [%32s]:\n", e->bname);
 	fgets (buffer, 80, stdin);
+	buffer[strlen(buffer) - 1] = 0;
+	if (strlen (buffer) == 0) break;
 	buffer[32] = 0;
 	set_eeprom_bname (&epr, buffer);
 	break;
       }
-    case 's':
+    case '5':
       {
 	fprintf (stderr, "Serial Number  (12 bytes) [%12s]:\n", e->serial);
 	fgets (buffer, 80, stdin);
+	buffer[strlen(buffer) - 1] = 0;
+	if (strlen (buffer) == 0) break;
 	buffer[12] = 0;
 	set_eeprom_serial_number (&epr, buffer);
 	break;
@@ -281,15 +333,25 @@ cmd_board (EEPROM_HDR *e, char *cmd)
 	_state = 0;
 	break;
       }
+    case 'q':
+      {
+	return 1;
+      }
+    case 'p':
+      {
+	break;
+      }
+
     case '?':
       {
 	fprintf (stderr, "Available commands:\n");
 	fprintf (stderr, "  u\t\t Back to general commands\n");
-	fprintf (stderr, "  n\t\t Set Cape Name\n");
-	fprintf (stderr, "  v\t\t Set Cape Version\n");
-	fprintf (stderr, "  m\t\t Set Cape Manufacturer\n");
-	fprintf (stderr, "  p\t\t Set Cape Part Number\n");
-	fprintf (stderr, "  s\t\t Set Cape Serial Number\n");
+	fprintf (stderr, "  p\t\t Print Cape info\n");
+	fprintf (stderr, "  1\t\t Set Cape Name\n");
+	fprintf (stderr, "  2\t\t Set Cape Version\n");
+	fprintf (stderr, "  3\t\t Set Cape Manufacturer\n");
+	fprintf (stderr, "  4\t\t Set Cape Part Number\n");
+	fprintf (stderr, "  5\t\t Set Cape Serial Number\n");
 	break;
       }
     default:
@@ -314,6 +376,7 @@ main (int argc, char *argv[])
 	   "This is free software: you are free to change and redistribute it.\n"
 	   "There is NO WARRANTY, to the extent permitted by law.\n\n");
 
+  fprintf (stderr, "\nPress ? for help\n");
   /* Set Header */
   set_eeprom_magic (&epr);
   set_eeprom_rev (&epr, "A1");
@@ -324,16 +387,26 @@ main (int argc, char *argv[])
   set_eeprom_n_pins (&epr, 0);
   set_eeprom_serial_number (&epr, "2912WTHR0383");
   
+  _dirty = 0;
   flag = 0;
   while (!flag)
     {
-      fprintf (stderr, "BBCapeEEPROM-%s> ", st_name[_state]);  
+      fprintf (stderr, "\n%sBBCapeEEPROM-%s> ", 
+	       _dirty ? "*": "",
+	       st_name[_state]);  
+
     skip_prompt:
       fgets (buffer, LINE_SIZE, stdin);
       buffer[strlen(buffer) - 1] = 0; /* Chomp */
       if (strlen(buffer) <=0 ) goto skip_prompt;
       flag = cmd_func[_state] (&epr, buffer);
-
+      if (flag && _dirty)
+	{
+	  fprintf (stderr, "EEPRom modified. Do you want to exit? ");
+	  scanf ("%c", buffer);
+	  if ((buffer[0] == 'n' ) || (buffer[0] == 'N'))
+	    flag = 0;
+	}
     }
   fprintf (stderr, "--\nThanks for using BeagleBoneCape EEPROM Generator\n");
   fprintf (stderr, "Visit http://papermint-designs.com/community for more tools and tutorials\n\n");
