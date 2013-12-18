@@ -14,9 +14,10 @@ Latest version implementes the following commands:
 q         : Quit<br>
 d         : Dumps current  EEPROM content<br>
 b	  : Add board info<br>
+c	  : Configure pins<br>
 w [fname] : Write EEPROM to file<br>
 
-On board infor mode the following commands are available:
+On board info mode the following commands are available:
 
 u		 Back to general commands<br>
 p		 Print Cape info<br>
@@ -26,6 +27,25 @@ p		 Print Cape info<br>
 4		 Set Cape Part Number<br>
 5		 Set Cape Serial Number<br>
 
+
+On Hardware configuration mode the following commands are available:
+
+u		 Back to general commands<br>
+q		 Quit<br>
+l		 List Hardware Interfaces<br>
+a		 Add Hardware Interfaces<br>
+d		 Delete Hardware Interfaces<br>
+w		 Generate DTS file<br>
+
+Current hardware interfaces supported are:
+
+0 - UART1<br>
+1 - UART2<br>
+2 - UART4<br>
+3 - UART5<br>
+4 - I2C-1<br>
+
+Note: I2C specific configuration parameters not yet supported
 
 Default header Fileds Values
 ----------------------------

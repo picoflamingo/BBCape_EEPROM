@@ -23,7 +23,7 @@ along with BBCape_EEPROM.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <stdlib.h>
 
-#define VERSION "0.1"
+#define VERSION "0.2"
 
 #define SIZE 32 * 1024
 #define HEADER_SIZE 244
@@ -58,13 +58,14 @@ typedef int (*CMD_FUNCTION) (EEPROM_HDR*, char*);
 /* Command callbacks prototypes */
 int cmd_general (EEPROM_HDR*, char*);
 int cmd_board (EEPROM_HDR*, char*);
+int cmd_hw (EEPROM_HDR*, char*);
 
 static int _state = 0;
 static int _dirty = 0;
 
 #define MAX_STATE 1
-static CMD_FUNCTION cmd_func[] = {cmd_general, cmd_board, NULL};
-static char         *st_name[] = {"TOP", "BOARD", NULL};
+static CMD_FUNCTION cmd_func[] = {cmd_general, cmd_board, cmd_hw, NULL};
+static char         *st_name[] = {"TOP", "BOARD", "HW", NULL};
 int
 set_eeprom_serial_number (EEPROM_HDR *e, char *sn)
 {
@@ -247,6 +248,12 @@ cmd_general (EEPROM_HDR *e, char *buffer)
 	_state = 1;
 	break;
       }
+    case 'c':
+      {
+	fprintf (stderr, "+ Editing pin info\n");
+	_state = 2;
+	break;
+      }
 
     case '?':
       {
@@ -254,6 +261,7 @@ cmd_general (EEPROM_HDR *e, char *buffer)
 	fprintf (stderr, "  q\t\t Quit\n");
 	fprintf (stderr, "  d\t\t Dump EEPROM\n");
 	fprintf (stderr, "  b\t\t Add board info\n");
+	fprintf (stderr, "  c\t\t Config Pins\n");
 	fprintf (stderr, "  w [fname]\t Write EEPROM to file\n");
 	fprintf (stderr, "  r [fname]\t Read EEPROM from file\n\n");
 	break;
@@ -362,6 +370,84 @@ cmd_board (EEPROM_HDR *e, char *cmd)
 
   return 0;
 }
+
+
+int
+cmd_hw (EEPROM_HDR *e, char *cmd)
+{
+  char buffer[80];
+
+
+  switch (cmd[0])
+    {
+    case 'w':
+      {
+	fprintf (stderr, "DTS file name: ");
+	fgets (buffer, 80, stdin);
+	buffer[strlen(buffer) - 1] = 0;
+	if (strlen (buffer) == 0) break;
+	hw_write_dts (buffer, epr.part_number, epr.version);
+	break;
+      }
+    case 'a':
+      {
+	hw_list ();
+	fprintf (stderr, "Hardware interface to add: ");
+	fgets (buffer, 80, stdin);
+	buffer[strlen(buffer) - 1] = 0;
+	if (strlen (buffer) == 0) break;
+	/* Adding the hardware interface */
+	hw_add_remove (atoi(buffer), 1);
+	break;
+      }
+    case 'd':
+      {
+	hw_list ();
+	fprintf (stderr, "Hardware interface to delete: ");
+	fgets (buffer, 80, stdin);
+	buffer[strlen(buffer) - 1] = 0;
+	if (strlen (buffer) == 0) break;
+	/* Adding the hardware interface */
+	hw_add_remove (atoi(buffer), 0);
+	break;
+      }
+
+    case 'l':
+      {
+	hw_list ();
+	break;
+      }
+    case 'u':
+      {
+	fprintf (stderr, "Back to TOP state\n");
+	_state = 0;
+	break;
+      }
+    case 'q':
+      {
+	return 1;
+      }
+  
+    case '?':
+      {
+	fprintf (stderr, "Available commands:\n");
+	fprintf (stderr, "  u\t\t Back to general commands\n");
+	fprintf (stderr, "  q\t\t Quit\n");
+	fprintf (stderr, "  l\t\t List Hardware Interfaces\n");
+	fprintf (stderr, "  a\t\t Add Hardware Interfaces\n");
+	fprintf (stderr, "  d\t\t Delete Hardware Interfaces\n");
+	fprintf (stderr, "  w\t\t Generate DTS file\n");
+	break;
+      }
+    default:
+      {
+	fprintf (stderr, "- Pardon?. Enter ? for help\n\n");
+      }
+    }
+
+  return 0;
+}
+
 
 int
 main (int argc, char *argv[])

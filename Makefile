@@ -16,6 +16,11 @@
 # along with BBCape_EEPROM.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-bbcape_eeprom: bbcape_eeprom.c
-	${CC} -o $@ $<
+SRC=bbcape_eeprom.c pins.c
+HEADERS=pins.h
+bbcape_eeprom: ${SRC} ${HEADERS}
+	${CC} -g -o $@ ${SRC}
 
+.phony:
+clean:
+	rm bbcape_eeprom
