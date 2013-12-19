@@ -148,7 +148,7 @@ EEPROM_PIN pin_cfg[] = {
   {120, "P8_14", "GPIO0_26",    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x028, 0x00},
   {122, "P8_17", "GPIO0_27",    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02c, 0x00},
   {124, "P9_11", "UART4_RXD",   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x070, 0x00},
-  {126, "P9-13", "UART4_TXD",   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x074, 0x00},
+  {126, "P9_13", "UART4_TXD",   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x074, 0x00},
 
   {128, "P8_25", "GPIO1_0",     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x000, 0x00},
   {130, "P8_24", "GPIO1_1",     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x004, 0x00},
@@ -282,6 +282,8 @@ hw_write_dts (char *fname, char *cape_name, char *rev)
 {
   FILE   *f;
   int    i,j;
+  char   *tmp, *aux;
+
   if ((f = fopen (fname, "wt")) == NULL)
     {
       fprintf (stderr, "Cannot open file %s\n", fname);
@@ -300,7 +302,13 @@ hw_write_dts (char *fname, char *cape_name, char *rev)
     {
       if (!device[i].used) continue;
       for (j = 0; j < device[i].n; j++)
-	fprintf (f, "        \"%s\", \n", device[i].pin[j].name);
+	{
+	  tmp = strdup (device[i].pin[j].name);
+	  aux = strchr (tmp, '_');
+	  if (aux) *aux = '.';
+	  fprintf (f, "        \"%s\", \n", tmp);
+	  free (tmp);
+	}
     }
   int cnt = 0;
   for (i = 0; device[i].name; i++)
@@ -323,12 +331,12 @@ hw_write_dts (char *fname, char *cape_name, char *rev)
       fprintf (f, "        target = <&am33xx_pinmux>;\n");
       fprintf (f, "        __overlay__{\n");
       fprintf (f, "            bb_%s_pins: pinmux_bb_%s_pins {\n", device[i].ip, device[i].ip);
-      fprintf (f, "                printctrl-single,pins = <\n");
+      fprintf (f, "                pinctrl-single,pins = <\n");
 
       for (j = 0; j < device[i].n; j++)
 	{
 	  int pin = pins_select_pin_by_name (device[i].pin[j].name);
-	  fprintf (f, "               0x%x 0x%x\n", pin_cfg[pin].reg_off, device[i].pin[j].pinctrl);
+	  fprintf (f, "               0x%x 0x%02x\n", pin_cfg[pin].reg_off, device[i].pin[j].pinctrl);
 	}
 
       fprintf (f, "                >;\n");
