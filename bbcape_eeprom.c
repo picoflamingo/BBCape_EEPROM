@@ -1,6 +1,6 @@
 /* 
 BBCape_EEPROM: BeagleBone Cape EEPRom Generator
-Copyright (c) 2013 David Martínez Oliveira
+Copyright (c) 2013-2014 David Martínez Oliveira
 
 This file is part of BBCape_EEPROM
 
@@ -23,7 +23,7 @@ along with BBCape_EEPROM.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <stdlib.h>
 
-#define VERSION "0.2"
+#define VERSION "0.3"
 
 #define SIZE 32 * 1024
 #define HEADER_SIZE 244
@@ -69,7 +69,7 @@ static char         *st_name[] = {"TOP", "BOARD", "HW", NULL};
 int
 set_eeprom_serial_number (EEPROM_HDR *e, char *sn)
 {
-  strncpy (e->serial, sn, 16);
+  strncpy (e->serial, sn, 12);
   _dirty = 1;
 
   return 0;

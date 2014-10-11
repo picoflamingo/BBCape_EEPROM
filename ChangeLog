@@ -1,3 +1,7 @@
+Sat Oct 11 10:55:31 CEST 2014
+	* Fixed buffer overflow reported by Frank Theile
+	  Ref: https://github.com/picoflamingo/BBCape_EEPROM/issues/1
+
 Thu Dec 19 00:32:44 CET 2013
 	* Initial support for generation of DTS
 
