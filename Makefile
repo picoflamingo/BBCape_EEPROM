@@ -18,8 +18,9 @@
 
 SRC=bbcape_eeprom.c pins.c
 HEADERS=pins.h
+CFLAGS=-Wall
 bbcape_eeprom: ${SRC} ${HEADERS}
-	${CC} -g -o $@ ${SRC}
+	${CC} ${CFLAGS} -g -o $@ ${SRC}
 
 .phony:
 clean:
