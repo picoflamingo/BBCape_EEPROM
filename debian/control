@@ -1,0 +1,15 @@
+Source: bbcape-eeprom
+Section: universe/embedded
+Priority: optional
+Build-Depends: debhelper (>= 9)
+Maintainer: Spencer E. Olson <olsonse@umich.edu>
+Standards-Version: 3.9.2
+Homepage: https://github.com/picoflamingo/BBCape_EEPROM
+Vcs-Git: https://github.com/picoflamingo/BBCape_EEPROM.git
+
+Package: bbcape-eeprom
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Simple tool to generate/modify EEPROM files for BeagleBone Capes
+ The application follows a simple user interface similar to fdisk effectively
+ supporting easy scripting.

@@ -28,6 +28,10 @@ VERSION=$(subst bbcape-eeprom-,,$(GIT_VERSION))
 bbcape_eeprom: ${SRC} ${HEADERS}
 	${CC} ${CFLAGS} -g -o $@ ${SRC} -DVERSION=\"$(VERSION)\"
 
+install : bbcape_eeprom
+	mkdir -p $(prefix)/bin
+	install -m 0755 bbcape_eeprom $(prefix)/bin/
+
 .phony:
 clean:
 	rm bbcape_eeprom
