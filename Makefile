@@ -19,8 +19,14 @@
 SRC=bbcape_eeprom.c pins.c
 HEADERS=pins.h
 CFLAGS=-Wall
+
+prefix ?=/usr
+
+GIT_VERSION=$(shell git describe --tags 2> /dev/null || echo bbcape-eeprom-0.4)
+VERSION=$(subst bbcape-eeprom-,,$(GIT_VERSION))
+
 bbcape_eeprom: ${SRC} ${HEADERS}
-	${CC} ${CFLAGS} -g -o $@ ${SRC}
+	${CC} ${CFLAGS} -g -o $@ ${SRC} -DVERSION=\"$(VERSION)\"
 
 .phony:
 clean:

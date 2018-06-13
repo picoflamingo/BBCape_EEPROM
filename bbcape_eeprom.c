@@ -25,8 +25,6 @@ along with BBCape_EEPROM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pins.h"
 
-#define VERSION "0.3"
-
 #define SIZE 32 * 1024
 #define HEADER_SIZE 244
 
