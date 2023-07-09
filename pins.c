@@ -239,7 +239,7 @@ pins_clean ()
 int
 pins_select_pin_by_name (char *pin_name)
 {
-  int i, j;
+  int i;
 
   for (i = 0; pin_cfg[i].offset; i++)
     {
@@ -360,4 +360,6 @@ hw_write_dts (char *fname, char *cape_name, char *rev)
 
   fprintf (f, "\n};\n");
   fclose (f);
+
+  return 0;
 }

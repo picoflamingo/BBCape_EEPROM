@@ -18,8 +18,19 @@
 
 SRC=bbcape_eeprom.c pins.c
 HEADERS=pins.h
+CFLAGS=-Wall
+
+prefix ?=/usr
+
+GIT_VERSION=$(shell git describe --tags 2> /dev/null || echo bbcape-eeprom-0.4)
+VERSION=$(subst bbcape-eeprom-,,$(GIT_VERSION))
+
 bbcape_eeprom: ${SRC} ${HEADERS}
-	${CC} -g -o $@ ${SRC}
+	${CC} ${CFLAGS} -g -o $@ ${SRC} -DVERSION=\"$(VERSION)\"
+
+install : bbcape_eeprom
+	mkdir -p $(prefix)/bin
+	install -m 0755 bbcape_eeprom $(prefix)/bin/
 
 .phony:
 clean:

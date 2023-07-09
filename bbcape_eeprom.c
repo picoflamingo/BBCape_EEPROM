@@ -23,7 +23,7 @@ along with BBCape_EEPROM.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <stdlib.h>
 
-#define VERSION "0.3"
+#include "pins.h"
 
 #define SIZE 32 * 1024
 #define HEADER_SIZE 244
@@ -69,7 +69,7 @@ static char         *st_name[] = {"TOP", "BOARD", "HW", NULL};
 int
 set_eeprom_serial_number (EEPROM_HDR *e, char *sn)
 {
-  strncpy (e->serial, sn, 12);
+  strncpy ((char*)e->serial, sn, 12);
   _dirty = 1;
 
   return 0;
@@ -93,7 +93,7 @@ set_eeprom_n_pins (EEPROM_HDR *e, int n)
 int
 set_eeprom_part_number (EEPROM_HDR *e, char *pn)
 {
-  strncpy (e->part_number, pn, 16);
+  strncpy ((char*)e->part_number, pn, 16);
 
   _dirty = 1;
 
@@ -103,7 +103,7 @@ set_eeprom_part_number (EEPROM_HDR *e, char *pn)
 int
 set_eeprom_manufacturer (EEPROM_HDR *e, char *m_name)
 {
-  strncpy (e->manufacturer, m_name, 16);
+  strncpy ((char*)e->manufacturer, m_name, 16);
 
   _dirty = 1;
 
@@ -113,7 +113,7 @@ set_eeprom_manufacturer (EEPROM_HDR *e, char *m_name)
 int
 set_eeprom_version (EEPROM_HDR *e, char *version)
 {
-  strncpy (e->version, version, 4);
+  strncpy ((char*)e->version, version, 4);
 
   _dirty = 1;
 
@@ -123,7 +123,7 @@ set_eeprom_version (EEPROM_HDR *e, char *version)
 int
 set_eeprom_bname (EEPROM_HDR *e, char *name)
 {
-  strncpy (e->bname, name, 32);
+  strncpy ((char*)e->bname, name, 32);
 
   _dirty = 1;
 
@@ -149,6 +149,7 @@ set_eeprom_magic (EEPROM_HDR *e)
   e->magic[1] = 0x55;
   e->magic[2] = 0x33;
   e->magic[3] = 0xEE;
+  return 0;
 }
 
 int
@@ -157,7 +158,7 @@ eeprom_dump (EEPROM_HDR *e)
   int            i,j;
   char           c;
   unsigned char *p = (unsigned char*) e;
-  printf ("");
+  printf ("\n");
   for (i = 0; i < HEADER_SIZE; i+=16)
     {
       if (i % 256 == 0)
@@ -413,7 +414,7 @@ cmd_hw (EEPROM_HDR *e, char *cmd)
 	fgets (buffer, 80, stdin);
 	buffer[strlen(buffer) - 1] = 0;
 	if (strlen (buffer) == 0) break;
-	hw_write_dts (buffer, epr.part_number, epr.version);
+	hw_write_dts (buffer, (char*)epr.part_number, (char*)epr.version);
 	break;
       }
     case 'a':
@@ -523,4 +524,6 @@ main (int argc, char *argv[])
     }
   fprintf (stderr, "--\nThanks for using BeagleBoneCape EEPROM Generator\n");
   fprintf (stderr, "Visit http://papermint-designs.com/community for more tools and tutorials\n\n");
+
+  return 0;
 }
